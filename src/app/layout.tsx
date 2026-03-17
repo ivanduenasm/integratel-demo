@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import WidgetOverlay from "@/components/WidgetOverlay";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -34,10 +33,8 @@ export default function RootLayout({
           data-auto-open="false"
         ></script>
       </head>
-      <body className={inter.className}>
-        {children}
-        <WidgetOverlay />
-      </body>
+      <body className={inter.className}>{children}</body>
     </html>
   );
 }
+
