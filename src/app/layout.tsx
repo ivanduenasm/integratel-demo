@@ -25,7 +25,7 @@ export default function RootLayout({
           data-public-key={process.env.NEXT_PUBLIC_RETELL_PUBLIC_KEY}
           data-agent-id={process.env.NEXT_PUBLIC_CHAT_AGENT_ID}
           data-title="Integratel Support"
-          data-logo-url="https://integratel-demo.vercel.app/logoVoizLab.png"
+          data-logo-url="https://integratel-demo.vercel.app/logo_only%20V.PNG"
           data-color="#1F2937"
           data-bot-name="Camila - Integratel IA"
           data-popup-message="¡Hola! Soy Camila, tu asistente de Integratel. ¿En qué te puedo ayudar?"
