@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import WidgetOverlay from "@/components/WidgetOverlay";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -24,15 +25,19 @@ export default function RootLayout({
           data-public-key={process.env.NEXT_PUBLIC_RETELL_PUBLIC_KEY}
           data-agent-id={process.env.NEXT_PUBLIC_CHAT_AGENT_ID}
           data-title="Integratel Support"
+          data-logo-url="https://integratel-demo.vercel.app/logoVoizLab.png"
           data-color="#1F2937"
-          data-bot-name="Integratel AI"
-          data-popup-message="Hello! I am your Integratel assistant. How can I help you today?"
+          data-bot-name="Camila - Integratel IA"
+          data-popup-message="¡Hola! Soy Camila, tu asistente de Integratel. ¿En qué te puedo ayudar?"
           data-show-ai-popup="true"
           data-show-ai-popup-time="2"
           data-auto-open="false"
         ></script>
       </head>
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        {children}
+        <WidgetOverlay />
+      </body>
     </html>
   );
 }
