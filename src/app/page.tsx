@@ -1,3 +1,4 @@
+import Image from "next/image";
 import VoiceCall from "@/components/VoiceCall";
 import CrmSimulator from "@/components/CrmSimulator";
 
@@ -8,13 +9,15 @@ export default function Home() {
       {/* LEFT PANE: CRM Simulator */}
       <div className="w-full md:w-[400px] lg:w-[450px] shrink-0 border-r border-[#27272A] bg-[#0E0E10] flex flex-col h-screen overflow-hidden">
         {/* Branding Area */}
-        <div className="flex items-center gap-3 px-8 py-6 border-b border-[#27272A]">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-[#8C52FF] to-[#5CE1E6] flex items-center justify-center shadow-[0_0_15px_rgba(140,82,255,0.4)]">
-             <span className="text-white font-extrabold text-xl font-mono tracking-tighter">V</span>
-          </div>
-          <h1 className="text-2xl font-bold tracking-tight text-white">
-            Voiz<span className="text-gray-400">Lab</span>
-          </h1>
+        <div className="flex items-center gap-3 px-8 py-5 border-b border-[#27272A]">
+          <Image
+            src="/logoVoizLab.png"
+            alt="VoizLab Logo"
+            width={160}
+            height={48}
+            className="object-contain"
+            priority
+          />
         </div>
         
         {/* CRM Content */}
@@ -33,7 +36,7 @@ export default function Home() {
         <div className="relative z-10 w-full max-w-2xl flex flex-col items-center text-center">
           <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-md">
             <span className="flex h-2 w-2 rounded-full bg-[#5CE1E6] animate-pulse"></span>
-            <span className="text-sm font-medium tracking-wide text-gray-300">Retell AI Integration Active</span>
+            <span className="text-sm font-medium tracking-wide text-gray-300">VoizLab AI Integration Active</span>
           </div>
 
           <h2 className="text-5xl lg:text-7xl font-extrabold tracking-tighter mb-6 bg-clip-text text-transparent bg-gradient-to-r from-white via-gray-100 to-gray-500">
