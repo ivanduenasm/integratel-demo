@@ -3,24 +3,24 @@
 import { useEffect, useRef } from "react";
 
 interface SoundWaveProps {
-  isActive: boolean;      // call is live
-  isAgentTalking: boolean; // drives amplitude
+  isActive: boolean;
+  isAgentTalking: boolean;
 }
 
+// Each wave: color, how fast it scrolls (radians/sec), starting phase offset, relative amplitude
 const WAVES = [
-  { color: "rgba(140, 82, 255, 0.55)", speed: 0.018, phase: 0,     amplitude: 1.0 },
-  { color: "rgba(92, 225, 230, 0.45)",  speed: 0.013, phase: 2.1,   amplitude: 0.85 },
-  { color: "rgba(200, 100, 255, 0.40)", speed: 0.021, phase: 4.2,   amplitude: 0.70 },
-  { color: "rgba(255, 120, 220, 0.35)", speed: 0.010, phase: 1.0,   amplitude: 0.60 },
-  { color: "rgba(80, 160, 255, 0.30)",  speed: 0.016, phase: 3.3,   amplitude: 0.75 },
+  { color: "rgba(140, 82, 255, 0.60)", speed: 0.9,  phase: 0.0,  amp: 1.00 },
+  { color: "rgba(92, 225, 230, 0.50)",  speed: 0.65, phase: 1.2,  amp: 0.80 },
+  { color: "rgba(210, 90, 255, 0.45)",  speed: 1.10, phase: 2.5,  amp: 0.70 },
+  { color: "rgba(255, 110, 200, 0.35)", speed: 0.50, phase: 4.0,  amp: 0.55 },
+  { color: "rgba(70, 160, 255, 0.30)",  speed: 0.75, phase: 3.1,  amp: 0.65 },
 ];
 
 export default function SoundWave({ isActive, isAgentTalking }: SoundWaveProps) {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef = useRef<number>(0);
-  const timeRef = useRef<number>(0);
-  const ampRef = useRef<number>(0);    // current smoothed amplitude
-  const targetAmpRef = useRef<number>(0);
+  const canvasRef  = useRef<HTMLCanvasElement>(null);
+  const rafRef     = useRef<number>(0);
+  const ampRef     = useRef(0);       // smoothed amplitude 0→1
+  const startRef   = useRef<number | null>(null);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -28,60 +28,63 @@ export default function SoundWave({ isActive, isAgentTalking }: SoundWaveProps) 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
-    // Resize canvas to fill its container
     const resize = () => {
-      canvas.width = canvas.offsetWidth * window.devicePixelRatio;
-      canvas.height = canvas.offsetHeight * window.devicePixelRatio;
-      ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width  = canvas.offsetWidth  * dpr;
+      canvas.height = canvas.offsetHeight * dpr;
+      ctx.resetTransform();
+      ctx.scale(dpr, dpr);
     };
     resize();
     window.addEventListener("resize", resize);
 
-    const draw = () => {
-      const W = canvas.offsetWidth;
-      const H = canvas.offsetHeight;
-      const cx = H / 2;
+    const draw = (now: number) => {
+      // Initialise timer on first frame
+      if (startRef.current === null) startRef.current = now;
+      const elapsed = (now - startRef.current) / 1000; // seconds
 
-      // Smooth amplitude towards target
-      const target = isAgentTalking ? 1 : (isActive ? 0.35 : 0);
-      ampRef.current += (target - ampRef.current) * 0.06;
+      const W   = canvas.offsetWidth;
+      const H   = canvas.offsetHeight;
+      const mid = H / 2;
+
+      // Smoothly lerp amplitude toward target
+      const target = isAgentTalking ? 1.0 : isActive ? 0.30 : 0.0;
+      ampRef.current += (target - ampRef.current) * 0.03; // slow lerp
 
       ctx.clearRect(0, 0, W, H);
 
-      // Glow effect: radial gradient in centre
-      if (ampRef.current > 0.05) {
-        const grd = ctx.createRadialGradient(W / 2, cx, 0, W / 2, cx, W * 0.45);
-        grd.addColorStop(0, `rgba(180, 100, 255, ${0.12 * ampRef.current})`);
-        grd.addColorStop(0.5, `rgba(92, 225, 230, ${0.06 * ampRef.current})`);
-        grd.addColorStop(1, "rgba(0,0,0,0)");
+      // Centre glow
+      if (ampRef.current > 0.02) {
+        const grd = ctx.createRadialGradient(W / 2, mid, 0, W / 2, mid, W * 0.4);
+        grd.addColorStop(0,   `rgba(160, 90, 255, ${0.15 * ampRef.current})`);
+        grd.addColorStop(0.5, `rgba(92, 225, 230, ${0.07 * ampRef.current})`);
+        grd.addColorStop(1,   "rgba(0,0,0,0)");
         ctx.fillStyle = grd;
         ctx.fillRect(0, 0, W, H);
       }
 
-      // Draw each wave
+      const maxAmp  = mid * 0.50; // never exceed 50% of half-height
+      const freqCyc = 2.5;        // how many full wave cycles fit across the width
+
       for (const wave of WAVES) {
-        const amp = cx * 0.55 * ampRef.current * wave.amplitude;
-        const freq = (2 * Math.PI * 2.2) / W;
+        const amplitude = maxAmp * ampRef.current * wave.amp;
+        // frequency in radians per pixel
+        const freq = (2 * Math.PI * freqCyc) / W;
 
         ctx.beginPath();
-        ctx.moveTo(0, cx);
-
-        for (let x = 0; x <= W; x += 2) {
-          const y =
-            cx +
-            amp *
-              Math.sin(freq * x + timeRef.current * wave.speed * 60 + wave.phase);
-          ctx.lineTo(x, y);
+        for (let x = 0; x <= W; x += 1.5) {
+          const angle = freq * x + wave.speed * elapsed + wave.phase;
+          const y     = mid + amplitude * Math.sin(angle);
+          x === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
 
         ctx.strokeStyle = wave.color;
-        ctx.lineWidth = 3.5;
+        ctx.lineWidth   = 3;
         ctx.shadowColor = wave.color;
-        ctx.shadowBlur = 12 * ampRef.current;
+        ctx.shadowBlur  = amplitude > 1 ? 14 : 0;
         ctx.stroke();
       }
 
-      timeRef.current += 1;
       rafRef.current = requestAnimationFrame(draw);
     };
 
@@ -91,18 +94,18 @@ export default function SoundWave({ isActive, isAgentTalking }: SoundWaveProps) 
       cancelAnimationFrame(rafRef.current);
       window.removeEventListener("resize", resize);
     };
-  }, [isActive, isAgentTalking]);
-
-  // Keep target updated when props change
-  useEffect(() => {
-    targetAmpRef.current = isAgentTalking ? 1 : isActive ? 0.35 : 0;
+  // Re-run effect only when activity changes so the timer resets cleanly
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isActive, isAgentTalking]);
 
   return (
     <canvas
       ref={canvasRef}
       className="absolute inset-0 w-full h-full rounded-3xl pointer-events-none"
-      style={{ opacity: isActive ? 1 : 0, transition: "opacity 0.8s ease" }}
+      style={{
+        opacity:    isActive ? 1 : 0,
+        transition: "opacity 1s ease",
+      }}
     />
   );
 }
